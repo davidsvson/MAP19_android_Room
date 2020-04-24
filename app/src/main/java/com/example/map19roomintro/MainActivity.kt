@@ -4,9 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.room.Database
 import androidx.room.Room
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,14 +18,41 @@ class MainActivity : AppCompatActivity() {
             .build()
 
 
-        val item = Item(0, "Mjölk", false, "kyl" )
+        val item = Item(0, "Smör", false, "kyl" )
+        val item2 = Item(0, "ost", false, "kyl" )
+        val item3 = Item(0, "bönor", false, "grönsak" )
+/*
+        saveItem(item)
+        saveItem(item2)
+        saveItem(item3)
+*/
+        val items = loadAllItems()
+        val itemsByCat = loadByCategory("grönsak")
 
-
-       // saveItem(item)
+        GlobalScope.launch {
+            itemsByCat.await().forEach {
+                println("!!! ${it.name}")
+            }
+        }
     }
 
     fun saveItem(item: Item) {
         GlobalScope.async(Dispatchers.IO) {   db.itemDao().insert(item) }
     }
+
+    fun loadAllItems() : Deferred<List<Item>>  =
+         GlobalScope.async(Dispatchers.IO) {
+            db.itemDao().getAll()
+        }
+
+    fun loadByCategory(category: String) :  Deferred<List<Item>>  =
+        GlobalScope.async(Dispatchers.IO) {
+            db.itemDao().findByCategory(category)
+        }
+
+
+
+
+
 
 }
